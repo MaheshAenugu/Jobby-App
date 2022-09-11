@@ -12,14 +12,14 @@ const apiStatusConstants = {
 }
 
 class JobProfile extends Component {
-  state = {profile: {}, profileStatus: apiStatusConstants.initial}
+  state = {profile: {}, status: apiStatusConstants.initial}
 
   componentDidMount = () => {
     this.userProfile()
   }
 
   userProfile = async () => {
-    this.setState({profileStatus: apiStatusConstants.inProgress})
+    this.setState({status: apiStatusConstants.inProgress})
     const url = 'https://apis.ccbp.in/profile'
     const jwtToken = Cookies.get('jwt_token')
     const options = {
@@ -38,24 +38,59 @@ class JobProfile extends Component {
         profileImageUrl: profile.profile_details.profile_image_url,
         shortBio: profile.profile_details.short_bio,
       }
-      this.setState({
-        profile: updateProfile,
-        profileStatus: apiStatusConstants.success,
-      })
+      this.setState(
+        {profile: updateProfile, status: apiStatusConstants.success},
+        this.languages,
+      )
     } else {
-      this.setState({profileStatus: apiStatusConstants.failure})
+      this.setState({status: apiStatusConstants.failure})
+    }
+  }
+
+  profileSuccess = () => {
+    const {profile} = this.state
+    const {name, profileImageUrl, shortBio} = profile
+    return (
+      <>
+        <div>
+          <img width={50} src={profileImageUrl} alt="profile" />
+          <h1 className="userName">{name}</h1>
+        </div>
+        <p className="shortBio">{shortBio}</p>
+        {}
+      </>
+    )
+  }
+
+  profileFailure = () => (
+    <div className="failureProfile">
+      <button
+        type="button"
+        className="logoutBtn retryBtn"
+        onClick={this.getProfile}
+      >
+        Retry
+      </button>
+    </div>
+  )
+
+  getProfileData = () => {
+    const {status} = this.state
+    switch (status) {
+      case apiStatusConstants.failure:
+        return this.profileFailure()
+      case apiStatusConstants.success:
+        return this.profileSuccess()
+      default:
+        return null
     }
   }
 
   render() {
-    const {profileImageUrl, name, shortBio} = this.state
-
     return (
-      <div className="profile-container">
-        <img src={profileImageUrl} alt={name} className="profile" />
-        <h1 className="profile-heading">{name}</h1>
-        <p className="profile-para">{shortBio}</p>
-      </div>
+      <>
+        <div className="profile-container">{this.getProfileData()}</div>
+      </>
     )
   }
 }
